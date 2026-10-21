@@ -1,0 +1,14 @@
+# ========================================================
+# Apache HBase Shell Script: Create 'vehicle_service' Table
+# ========================================================
+# Usage in HBase Shell:
+# hbase shell hbase/create_table.hbase
+
+# Check if table already exists, if not create it
+create 'vehicle_service', 'vehicle', 'customer', 'service'
+
+# Describe table structure
+describe 'vehicle_service'
+
+# List all tables in HBase
+list

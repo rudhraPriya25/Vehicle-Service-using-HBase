@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Service Record - Vehicle Service Record Management using HBase</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">🚗</div>
+      <div>
+        <h2>AutoHBase</h2>
+        <span>Vehicle Service Manager</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-link">
+        <span>📊</span> Dashboard
+      </a>
+      <a href="add-record.html" class="nav-link active">
+        <span>➕</span> Add Service Record
+      </a>
+      <a href="search.html" class="nav-link">
+        <span>🔍</span> Search & History
+      </a>
+      <a href="records.html" class="nav-link">
+        <span>📋</span> View All Records
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div id="hbase-status-badge" class="status-badge">
+        <span class="status-dot"></span> Checking HBase...
+      </div>
+      <p style="margin-top: 8px; font-size: 0.72rem; color: #64748b;">Table: vehicle_service</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-wrapper">
+    <header class="top-bar">
+      <div class="top-bar-title">
+        <h1>Add Vehicle & Service Record</h1>
+        <p>Creates a new HBase Row Key [vehicleNumber_serviceId] and inserts into Column Families</p>
+      </div>
+      <div class="top-bar-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-quick-sample">
+          <span>⚡</span> Quick Sample Fill
+        </button>
+      </div>
+    </header>
+
+    <div class="content-container">
+      
+      <div class="card">
+        <form id="add-record-form">
+          
+          <!-- Section 1: Vehicle Information (CF: vehicle) -->
+          <div class="form-section">
+            <div class="form-section-title">
+              <span>🚘</span> 1. Vehicle Details (Column Family: <code>vehicle</code>)
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="vehicleNumber">Vehicle Number <span class="required">*</span></label>
+                <input type="text" id="vehicleNumber" name="vehicleNumber" class="form-control" placeholder="e.g. TN38AB1234" required style="text-transform: uppercase;">
+              </div>
+              <div class="form-group">
+                <label for="vehicleType">Vehicle Type</label>
+                <select id="vehicleType" name="vehicleType" class="form-control">
+                  <option value="Car">Car</option>
+                  <option value="SUV">SUV</option>
+                  <option value="Sedan">Sedan</option>
+                  <option value="Hatchback">Hatchback</option>
+                  <option value="Motorcycle">Motorcycle</option>
+                  <option value="Electric Vehicle (EV)">Electric Vehicle (EV)</option>
+                  <option value="Truck">Truck</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="brand">Brand / Manufacturer</label>
+                <input type="text" id="brand" name="brand" class="form-control" placeholder="e.g. Hyundai, Honda, Tata">
+              </div>
+              <div class="form-group">
+                <label for="model">Model Name</label>
+                <input type="text" id="model" name="model" class="form-control" placeholder="e.g. Creta 1.5 SX, City ZX">
+              </div>
+              <div class="form-group">
+                <label for="manufacturingYear">Manufacturing Year</label>
+                <input type="number" id="manufacturingYear" name="manufacturingYear" class="form-control" placeholder="e.g. 2023" min="1990" max="2030">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Customer Information (CF: customer) -->
+          <div class="form-section">
+            <div class="form-section-title">
+              <span>👤</span> 2. Customer Details (Column Family: <code>customer</code>)
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="customerName">Customer Name <span class="required">*</span></label>
+                <input type="text" id="customerName" name="customerName" class="form-control" placeholder="e.g. Arun Kumar" required>
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g. 9876543210">
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="e.g. arun.kumar@gmail.com">
+              </div>
+              <div class="form-group full-width">
+                <label for="address">Address / City</label>
+                <input type="text" id="address" name="address" class="form-control" placeholder="e.g. 12, Gandhi Puram, Coimbatore">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Service Information (CF: service) -->
+          <div class="form-section">
+            <div class="form-section-title">
+              <span>🛠️</span> 3. Service Details (Column Family: <code>service</code>)
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="serviceId">Service ID <span class="required">*</span></label>
+                <input type="text" id="serviceId" name="serviceId" class="form-control" placeholder="e.g. S001, S002" required style="text-transform: uppercase;">
+              </div>
+              <div class="form-group">
+                <label for="serviceDate">Service Date <span class="required">*</span></label>
+                <input type="date" id="serviceDate" name="serviceDate" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="serviceType">Service Type</label>
+                <select id="serviceType" name="serviceType" class="form-control">
+                  <option value="Periodic Maintenance">Periodic Maintenance</option>
+                  <option value="Oil Change">Oil Change</option>
+                  <option value="Brake Overhaul">Brake Overhaul</option>
+                  <option value="Wheel & Suspension Alignment">Wheel & Suspension Alignment</option>
+                  <option value="AC & Electrical Service">AC & Electrical Service</option>
+                  <option value="Engine Diagnostics & Tuning">Engine Diagnostics & Tuning</option>
+                  <option value="Major Full Service">Major Full Service</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="serviceCost">Service Cost (₹) <span class="required">*</span></label>
+                <input type="number" step="0.01" id="serviceCost" name="serviceCost" class="form-control" placeholder="e.g. 4500.00" required>
+              </div>
+              <div class="form-group">
+                <label for="mechanicName">Assigned Mechanic</label>
+                <input type="text" id="mechanicName" name="mechanicName" class="form-control" placeholder="e.g. Rajesh Sharma">
+              </div>
+              <div class="form-group">
+                <label for="serviceStatus">Service Status</label>
+                <select id="serviceStatus" name="serviceStatus" class="form-control">
+                  <option value="Completed">Completed</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Delivered">Delivered</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="nextServiceDate">Next Recommended Service Date</label>
+                <input type="date" id="nextServiceDate" name="nextServiceDate" class="form-control">
+              </div>
+              <div class="form-group full-width">
+                <label for="problemDescription">Reported Problem / Customer Feedback</label>
+                <textarea id="problemDescription" name="problemDescription" class="form-control" placeholder="e.g. Squeaking noise while braking, engine oil top up required."></textarea>
+              </div>
+              <div class="form-group full-width">
+                <label for="partsReplaced">Parts Replaced / Materials Consumed</label>
+                <input type="text" id="partsReplaced" name="partsReplaced" class="form-control" placeholder="e.g. Front Brake Pads, 4L Engine Oil, Oil Filter">
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="reset" class="btn btn-secondary">
+              <span>🧹</span> Clear Form
+            </button>
+            <button type="submit" class="btn btn-primary" id="btn-submit-record">
+              <span>💾</span> Save Record to HBase (PUT)
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/add-record.js"></script>
+</body>
+</html>

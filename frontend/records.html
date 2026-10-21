@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View All Records - Vehicle Service Record Management using HBase</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">🚗</div>
+      <div>
+        <h2>AutoHBase</h2>
+        <span>Vehicle Service Manager</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-link">
+        <span>📊</span> Dashboard
+      </a>
+      <a href="add-record.html" class="nav-link">
+        <span>➕</span> Add Service Record
+      </a>
+      <a href="search.html" class="nav-link">
+        <span>🔍</span> Search & History
+      </a>
+      <a href="records.html" class="nav-link active">
+        <span>📋</span> View All Records
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div id="hbase-status-badge" class="status-badge">
+        <span class="status-dot"></span> Checking HBase...
+      </div>
+      <p style="margin-top: 8px; font-size: 0.72rem; color: #64748b;">Table: vehicle_service</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-wrapper">
+    <header class="top-bar">
+      <div class="top-bar-title">
+        <h1>All Vehicle Service Records</h1>
+        <p>Scanned from HBase table: <code>vehicle_service</code> | Filter, edit or delete records</p>
+      </div>
+      <div class="top-bar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadAllRecords()">
+          <span>🔄</span> Refresh Table (SCAN)
+        </button>
+        <a href="add-record.html" class="btn btn-primary btn-sm">
+          <span>➕</span> Add Record (PUT)
+        </a>
+      </div>
+    </header>
+
+    <div class="content-container">
+      
+      <!-- Filter Bar -->
+      <div class="card" style="padding: 16px 20px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div style="flex-grow: 1; min-width: 240px;">
+            <input type="text" id="table-filter-input" class="form-control" placeholder="🔍 Live filter by Vehicle No, Customer, Brand, Mechanic, Service Type...">
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label for="status-filter" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Status:</label>
+            <select id="status-filter" class="form-control" style="width: 140px;">
+              <option value="ALL">All Statuses</option>
+              <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Pending">Pending</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+          </div>
+          <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+            Showing <span id="record-count" style="color: var(--primary);">0</span> records
+          </div>
+        </div>
+      </div>
+
+      <!-- Records Table -->
+      <div class="card">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>HBase Row Key</th>
+                <th>Vehicle No</th>
+                <th>Customer</th>
+                <th>Vehicle Details</th>
+                <th>Service ID</th>
+                <th>Service Date</th>
+                <th>Type</th>
+                <th>Cost</th>
+                <th>Mechanic</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="records-tbody">
+              <tr>
+                <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                  Loading records from HBase table...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Edit Record Modal -->
+  <div id="edit-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+          <span>✏️</span> Edit Service Record (HBase PUT Update)
+        </h3>
+        <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+
+      <form id="edit-form">
+        <input type="hidden" id="edit-rowKey">
+        <input type="hidden" id="edit-vehicleNumber">
+        <input type="hidden" id="edit-serviceId">
+
+        <div style="background: #f1f5f9; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.85rem; display: flex; justify-content: space-between;">
+          <span><strong>Vehicle:</strong> <span id="edit-badge-vnum">--</span></span>
+          <span><strong>Service ID:</strong> <span id="edit-badge-sid">--</span></span>
+          <span><strong>Row Key:</strong> <code id="edit-badge-rkey">--</code></span>
+        </div>
+
+        <div class="form-grid" style="margin-bottom: 16px;">
+          <div class="form-group">
+            <label for="edit-vehicleType">Vehicle Type</label>
+            <input type="text" id="edit-vehicleType" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-brand">Brand</label>
+            <input type="text" id="edit-brand" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-model">Model</label>
+            <input type="text" id="edit-model" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-manufacturingYear">Manufacturing Year</label>
+            <input type="number" id="edit-manufacturingYear" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-customerName">Customer Name <span class="required">*</span></label>
+            <input type="text" id="edit-customerName" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-phone">Phone</label>
+            <input type="tel" id="edit-phone" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-email">Email</label>
+            <input type="email" id="edit-email" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-address">Address</label>
+            <input type="text" id="edit-address" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-serviceDate">Service Date <span class="required">*</span></label>
+            <input type="date" id="edit-serviceDate" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-serviceType">Service Type</label>
+            <input type="text" id="edit-serviceType" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-serviceCost">Service Cost (₹) <span class="required">*</span></label>
+            <input type="number" step="0.01" id="edit-serviceCost" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-mechanicName">Mechanic Name</label>
+            <input type="text" id="edit-mechanicName" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-serviceStatus">Status</label>
+            <select id="edit-serviceStatus" class="form-control">
+              <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Pending">Pending</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-nextServiceDate">Next Service Date</label>
+            <input type="date" id="edit-nextServiceDate" class="form-control">
+          </div>
+          <div class="form-group full-width">
+            <label for="edit-problemDescription">Problem Description</label>
+            <textarea id="edit-problemDescription" class="form-control"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="edit-partsReplaced">Parts Replaced</label>
+            <input type="text" id="edit-partsReplaced" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-edit">
+            <span>💾</span> Save Changes (PUT)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/records.js"></script>
+</body>
+</html>

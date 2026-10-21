@@ -1,0 +1,13 @@
+# ========================================================
+# Apache HBase Shell Script: Disable and Drop Table
+# ========================================================
+# In HBase, a table MUST be disabled before it can be dropped!
+
+# 1. Disable the table
+disable 'vehicle_service'
+
+# 2. Drop the table
+drop 'vehicle_service'
+
+# 3. Verify deletion
+list

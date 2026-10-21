@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Vehicle Service Record Management using HBase</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">🚗</div>
+      <div>
+        <h2>AutoHBase</h2>
+        <span>Vehicle Service Manager</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-link active">
+        <span>📊</span> Dashboard
+      </a>
+      <a href="add-record.html" class="nav-link">
+        <span>➕</span> Add Service Record
+      </a>
+      <a href="search.html" class="nav-link">
+        <span>🔍</span> Search & History
+      </a>
+      <a href="records.html" class="nav-link">
+        <span>📋</span> View All Records
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div id="hbase-status-badge" class="status-badge">
+        <span class="status-dot"></span> Checking HBase...
+      </div>
+      <p style="margin-top: 8px; font-size: 0.72rem; color: #64748b;">Table: vehicle_service</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-wrapper">
+    <header class="top-bar">
+      <div class="top-bar-title">
+        <h1>Service Center Dashboard</h1>
+        <p>Real-time analytics and overview powered by Apache HBase</p>
+      </div>
+      <div class="top-bar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="App.loadSampleData()">
+          <span>🔄</span> Reset / Load Sample Data
+        </button>
+        <a href="add-record.html" class="btn btn-primary btn-sm">
+          <span>➕</span> New Record
+        </a>
+      </div>
+    </header>
+
+    <div class="content-container">
+      
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon icon-blue">🚘</div>
+          <div class="stat-info">
+            <span>Total Vehicles</span>
+            <h3 id="stat-vehicles">--</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-cyan">🛠️</div>
+          <div class="stat-info">
+            <span>Service Records</span>
+            <h3 id="stat-records">--</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-green">💰</div>
+          <div class="stat-info">
+            <span>Total Revenue</span>
+            <h3 id="stat-revenue">--</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-yellow">⏳</div>
+          <div class="stat-info">
+            <span>Active / Pending</span>
+            <h3 id="stat-pending">--</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions and HBase Info Panel -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+        
+        <!-- Recent Services Panel -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <div class="card-title">
+              <span>🕒</span> Recent Service Transactions
+            </div>
+            <a href="records.html" class="btn btn-secondary btn-sm">View All Records &rarr;</a>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Vehicle No</th>
+                  <th>Customer</th>
+                  <th>Service Type</th>
+                  <th>Cost</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-table-body">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading records from HBase...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HBase Architecture & Schema Info Box -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <div class="card-title">
+              <span>🗄️</span> HBase Architecture
+            </div>
+          </div>
+          <div style="font-size: 0.86rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px;">
+            <div>
+              <strong style="color: var(--text-main);">Database:</strong> Apache HBase 2.6.7
+            </div>
+            <div>
+              <strong style="color: var(--text-main);">Table:</strong> <code>vehicle_service</code>
+            </div>
+            <div>
+              <strong style="color: var(--text-main);">Row Key Schema:</strong><br>
+              <code>vehicleNumber_serviceId</code>
+            </div>
+            <div>
+              <strong style="color: var(--text-main);">Column Families:</strong>
+              <ul style="padding-left: 20px; margin-top: 4px;">
+                <li><code>vehicle:</code> Info, Brand, Model, Year</li>
+                <li><code>customer:</code> Name, Phone, Email, Address</li>
+                <li><code>service:</code> ID, Date, Cost, Parts, Mechanic</li>
+              </ul>
+            </div>
+            <div style="margin-top: 8px;">
+              <a href="search.html" class="btn btn-primary btn-sm" style="width: 100%;">
+                <span>🔍</span> Search Vehicle History
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    async function loadDashboard() {
+      try {
+        const res = await App.apiRequest('/dashboard');
+        const d = res.data;
+
+        document.getElementById('stat-vehicles').textContent = d.totalVehicles || 0;
+        document.getElementById('stat-records').textContent = d.totalRecords || 0;
+        document.getElementById('stat-revenue').textContent = App.formatCurrency(d.totalRevenue);
+        document.getElementById('stat-pending').textContent = (d.inProgressCount + d.pendingCount) || 0;
+
+        const tbody = document.getElementById('recent-table-body');
+        if (!d.recentRecords || d.recentRecords.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No service records found in HBase. Click 'Reset / Load Sample Data' above.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = d.recentRecords.map(r => `
+          <tr>
+            <td><strong>${r.vehicleNumber}</strong><br><small style="color: var(--text-muted);">${r.brand} ${r.model}</small></td>
+            <td>${r.customerName}</td>
+            <td>${r.serviceType}</td>
+            <td><strong>${App.formatCurrency(r.serviceCost)}</strong></td>
+            <td>${App.getStatusBadge(r.serviceStatus)}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        document.getElementById('recent-table-body').innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">Failed to load dashboard data from HBase: ${err.message}</td></tr>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>
